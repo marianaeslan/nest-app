@@ -1,0 +1,53 @@
+package br.com.gabgrupo.nest.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import br.com.gabgrupo.nest.data.local.TokenDataStore
+import br.com.gabgrupo.nest.data.model.AuthRequest
+import br.com.gabgrupo.nest.data.repository.AuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val tokenDataStore: TokenDataStore
+) : ViewModel() {
+
+    private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
+    val state: StateFlow<AuthState> = _state.asStateFlow()
+
+    fun login(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            _state.value = AuthState.Error("Informe e-mail e senha.")
+            return
+        }
+
+        viewModelScope.launch {
+            _state.value = AuthState.Loading
+
+            val result = authRepository.login(AuthRequest(email.trim(), password))
+
+            result.onSuccess { response ->
+                tokenDataStore.saveToken(response.token)
+                tokenDataStore.saveRole(response.role.name)
+                tokenDataStore.saveUserId(response.userId)
+                tokenDataStore.saveName(response.name)
+                _state.value = AuthState.Success
+            }.onFailure { exception ->
+                _state.value = AuthState.Error(exception.message ?: "Falha ao autenticar. Tente novamente.")
+            }
+        }
+    }
+}
+
+sealed class AuthState {
+    data object Idle : AuthState()
+    data object Loading : AuthState()
+    data object Success : AuthState()
+    data class Error(val message: String) : AuthState()
+}
