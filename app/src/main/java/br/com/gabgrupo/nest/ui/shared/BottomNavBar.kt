@@ -2,6 +2,8 @@ package br.com.gabgrupo.nest.ui.shared
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -10,7 +12,6 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -50,18 +51,19 @@ fun NestBottomNavBar(
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+    // Correção: O Box agora ocupa a largura máxima com fillMaxWidth()
+    Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
         NavigationBar(
             containerColor = NestWhite,
             contentColor = NestTextSecondary
         ) {
             val items = NavItem.entries.toTypedArray()
-            
+
             // As 2 primeiras ações
             items.take(2).forEach { item ->
                 NestNavItem(item, currentRoute == item, onNavigate)
             }
-            
+
             // Espaço central vazio reservado para o FAB
             NavigationBarItem(
                 selected = false,
@@ -70,14 +72,14 @@ fun NestBottomNavBar(
                 label = { },
                 enabled = false
             )
-            
+
             // As 2 últimas ações
             items.drop(2).forEach { item ->
                 NestNavItem(item, currentRoute == item, onNavigate)
             }
         }
 
-        // O FAB agora é desenhado dentro da própria barra inferior e totalmente centralizado nela
+        // O FAB centralizado e sobreposto à barra
         NestFab(
             onClick = onFabClick,
             modifier = Modifier.align(Alignment.Center)
@@ -130,9 +132,10 @@ fun NestFab(
 @Composable
 fun BottomNavBarPreview() {
     var currentItem by remember { mutableStateOf(NavItem.HOME) }
-    
+
     NestTheme {
         Scaffold(
+            modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 NestBottomNavBar(
                     currentRoute = currentItem,
@@ -141,8 +144,8 @@ fun BottomNavBarPreview() {
                 )
             }
         ) { innerPadding ->
-            // Simulando o conteúdo da tela para o preview
-            Box(modifier = Modifier.padding(innerPadding)) {
+
+            Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
                 Text(
                     text = "Conteúdo Principal",
                     modifier = Modifier.padding(16.dp),

@@ -37,9 +37,7 @@ class AuthViewModel @Inject constructor(
                 tokenDataStore.saveRole(response.role.name)
                 tokenDataStore.saveUserId(response.userId)
                 tokenDataStore.saveName(response.name)
-                _state.value = AuthState.Success
-            }.onFailure { exception ->
-                _state.value = AuthState.Error(exception.message ?: "Falha ao autenticar. Tente novamente.")
+                _state.value = AuthState.Success(response.role.name)
             }
         }
     }
@@ -48,6 +46,6 @@ class AuthViewModel @Inject constructor(
 sealed class AuthState {
     data object Idle : AuthState()
     data object Loading : AuthState()
-    data object Success : AuthState()
+    data class Success(val role: String) : AuthState()
     data class Error(val message: String) : AuthState()
 }
