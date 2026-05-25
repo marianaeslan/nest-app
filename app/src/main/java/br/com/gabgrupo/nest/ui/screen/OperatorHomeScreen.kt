@@ -33,6 +33,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.theme.NestBackground
@@ -50,12 +53,15 @@ import br.com.gabgrupo.nest.ui.theme.NestNavy
 import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.ui.theme.StatusPending
+import br.com.gabgrupo.nest.viewmodel.HomeViewModel
 
 @Composable
 fun OperatorHomeScreen(
-    userName: String = "Marcos",
+    viewModel: HomeViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit
 ) {
+    val userName by viewModel.userName.collectAsState()
+
     OperatorHomeScreenContent(
         userName = userName,
         onNavigate = onNavigate
@@ -68,7 +74,7 @@ private fun OperatorHomeScreenContent(
     onNavigate: (String) -> Unit
 ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(), // Correção: Garante que o Scaffold ocupe a tela toda
+        modifier = Modifier.fillMaxSize(),
         bottomBar = {
             NestBottomNavBar(
                 currentRoute = NavItem.HOME,
