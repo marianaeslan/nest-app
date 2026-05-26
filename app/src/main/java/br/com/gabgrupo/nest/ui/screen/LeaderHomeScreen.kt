@@ -35,7 +35,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun LeaderScreen(viewModel: LeaderViewModel = hiltViewModel()) {
+fun LeaderHomeScreen(viewModel: LeaderViewModel = hiltViewModel()) {
     var currentNav by remember { mutableStateOf(NavItem.PROJECTS) }
     val userName by viewModel.userName.collectAsState()
     val userRole by viewModel.userRole.collectAsState()

@@ -18,16 +18,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.gabgrupo.nest.data.model.IdeaReviewRequest
-import br.com.gabgrupo.nest.ui.leader.LeaderScreen
+import br.com.gabgrupo.nest.data.model.IdeaStatus
+import br.com.gabgrupo.nest.ui.leader.LeaderHomeScreen
 import br.com.gabgrupo.nest.ui.screen.CreateIdeaScreen
 import br.com.gabgrupo.nest.ui.screen.HatchScreen
 import br.com.gabgrupo.nest.ui.screen.LoginScreen
 import br.com.gabgrupo.nest.ui.screen.OperatorHomeScreen
-import br.com.gabgrupo.nest.ui.screen.manager.AllIdeasScreen
-import br.com.gabgrupo.nest.ui.screen.manager.ManagerHomeScreen
+import br.com.gabgrupo.nest.ui.screen.ManagerHomeScreen
 import br.com.gabgrupo.nest.ui.theme.NestTheme
+import br.com.gabgrupo.nest.viewmodel.IdeaActionState
 import br.com.gabgrupo.nest.viewmodel.IdeaListState
 import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
+import br.com.gabgrupo.nest.viewmodel.ProjectListState
+import br.com.gabgrupo.nest.viewmodel.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -61,7 +64,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("dashboard") {
-                            LeaderScreen()
+                            LeaderHomeScreen()
 
                         }
 
@@ -89,49 +92,41 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("manager/home") {
-                            val viewModel: IdeaViewModel = hiltViewModel()
-                            val listState by viewModel.listState.collectAsState()
+                            val ideaViewModel: IdeaViewModel = hiltViewModel()
+                            val projectViewModel: ProjectViewModel = hiltViewModel()
+                            
+                            val ideaState by ideaViewModel.listState.collectAsState()
+                            val projectState by projectViewModel.listState.collectAsState()
+                            val actionState by ideaViewModel.actionState.collectAsState()
 
-                            LaunchedEffect(Unit) {
-                                viewModel.getAllIdeas()
+                            LaunchedEffect(actionState) {
+                                if (actionState is IdeaActionState.Success) {
+                                    ideaViewModel.getAllIdeas()
+                                    projectViewModel.getAllProjects()
+                                    ideaViewModel.resetActionState()
+                                }
                             }
 
-                            val ideas = (listState as? IdeaListState.Success)?.ideas ?: emptyList()
-                            val recentPendingIdeas = ideas.filter { it.status.name == "PENDING" }
+                            LaunchedEffect(Unit) {
+                                ideaViewModel.getAllIdeas()
+                                projectViewModel.getAllProjects()
+                            }
+
+                            val ideas = (ideaState as? IdeaListState.Success)?.ideas ?: emptyList()
+                            val pendingIdeasCount = ideas.count { it.status == IdeaStatus.PENDING }
+                            
+                            val projects = (projectState as? ProjectListState.Success)?.projects ?: emptyList()
+                            val activeProjectsCount = projects.filter { it.status == "IN_PROGRESS" }.size
 
                             ManagerHomeScreen(
                                 userName = userName.ifBlank { "Gestor" },
-                                recentPendingIdeas = recentPendingIdeas,
-                                onNavigate = { route -> navController.navigate(route) },
-                                onNavigateToReview = { ideaId ->
-                                    navController.navigate("manager/ideas/$ideaId")
-                                }
-                            )
-                        }
-
-                        composable("manager/ideas") {
-                            val viewModel: IdeaViewModel = hiltViewModel()
-                            val listState by viewModel.listState.collectAsState()
-
-                            LaunchedEffect(Unit) {
-                                viewModel.getAllIdeas()
-                            }
-
-                            val ideas = (listState as? IdeaListState.Success)?.ideas ?: emptyList()
-
-                            AllIdeasScreen(
+                                pendingIdeasCount = pendingIdeasCount,
+                                activeProjectsCount = activeProjectsCount,
                                 ideas = ideas,
-                                onNavigate = { route -> navController.navigate(route) },
                                 onSubmitReview = { id, status ->
-                                    viewModel.reviewIdea(
-                                        id = id,
-                                        request = IdeaReviewRequest(
-                                            status = status,
-                                            priority = 0
-                                        )
-                                    )
-                                    viewModel.getAllIdeas()
-                                }
+                                    ideaViewModel.reviewIdea(id, IdeaReviewRequest(status, 1))
+                                },
+                                onNavigate = { route -> navController.navigate(route) }
                             )
                         }
                     }
