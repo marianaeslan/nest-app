@@ -53,7 +53,7 @@ fun ManagerHomeScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Olá, $userName!",
+                            text = "Olá, ${userName.split(" ")[0]}!",
                             fontWeight = FontWeight.Bold,
                             color = NestNavy,
                             style = MaterialTheme.typography.titleMedium

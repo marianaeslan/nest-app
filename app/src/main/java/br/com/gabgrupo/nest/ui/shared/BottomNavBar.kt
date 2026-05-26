@@ -60,14 +60,13 @@ fun NestBottomNavBar(
             containerColor = NestWhite,
             contentColor = NestTextSecondary
         ) {
-            val items = if (userRole == UserRole.LEADER) {
-                listOf(NavItem.PROJECTS, NavItem.USERS)
-            } else {
-                listOf(NavItem.HOME, NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
+            val items = when (userRole) {
+                UserRole.LEADER -> listOf(NavItem.PROJECTS, NavItem.USERS)
+                UserRole.MANAGER -> listOf(NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
+                else -> listOf(NavItem.HOME, NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
             }
 
-            if (userRole == UserRole.LEADER) {
-                // Para o Leader, mostramos apenas os dois itens centralizados ou distribuídos
+            if (userRole == UserRole.LEADER || userRole == UserRole.MANAGER) {
                 items.forEach { item ->
                     NestNavItem(
                         item = item,
@@ -105,8 +104,7 @@ fun NestBottomNavBar(
             }
         }
 
-        // Esconde o FAB para o Leader se ele não deve criar ideias/projetos por aqui
-        if (userRole != UserRole.LEADER) {
+        if (userRole != UserRole.LEADER && userRole != UserRole.MANAGER) {
             NestFab(
                 onClick = onFabClick,
                 modifier = Modifier.align(Alignment.Center)
