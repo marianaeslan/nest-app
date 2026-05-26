@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -42,6 +43,7 @@ enum class NavItem(val title: String, val icon: ImageVector) {
     HOME("Início", Icons.Default.Home),
     IDEAS("Ideias", Icons.Default.Lightbulb),
     PROJECTS("Projetos", Icons.Default.Folder),
+    USERS("Usuários", Icons.Default.People),
     PROFILE("Perfil", Icons.Default.Person)
 }
 
@@ -58,39 +60,58 @@ fun NestBottomNavBar(
             containerColor = NestWhite,
             contentColor = NestTextSecondary
         ) {
-            val items = NavItem.entries.toTypedArray()
-
-            items.take(2).forEach { item ->
-                NestNavItem(
-                    item = item,
-                    isSelected = currentRoute == item,
-                    userRole = userRole,
-                    onNavigate = onNavigate
-                )
+            val items = if (userRole == UserRole.LEADER) {
+                listOf(NavItem.PROJECTS, NavItem.USERS)
+            } else {
+                listOf(NavItem.HOME, NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
             }
 
-            NavigationBarItem(
-                selected = false,
-                onClick = { },
-                icon = { },
-                label = { },
-                enabled = false
-            )
+            if (userRole == UserRole.LEADER) {
+                // Para o Leader, mostramos apenas os dois itens centralizados ou distribuídos
+                items.forEach { item ->
+                    NestNavItem(
+                        item = item,
+                        isSelected = currentRoute == item,
+                        userRole = userRole,
+                        onNavigate = onNavigate
+                    )
+                }
+            } else {
+                items.take(2).forEach { item ->
+                    NestNavItem(
+                        item = item,
+                        isSelected = currentRoute == item,
+                        userRole = userRole,
+                        onNavigate = onNavigate
+                    )
+                }
 
-            items.drop(2).forEach { item ->
-                NestNavItem(
-                    item = item,
-                    isSelected = currentRoute == item,
-                    userRole = userRole,
-                    onNavigate = onNavigate
+                NavigationBarItem(
+                    selected = false,
+                    onClick = { },
+                    icon = { },
+                    label = { },
+                    enabled = false
                 )
+
+                items.drop(2).forEach { item ->
+                    NestNavItem(
+                        item = item,
+                        isSelected = currentRoute == item,
+                        userRole = userRole,
+                        onNavigate = onNavigate
+                    )
+                }
             }
         }
 
-        NestFab(
-            onClick = onFabClick,
-            modifier = Modifier.align(Alignment.Center)
-        )
+        // Esconde o FAB para o Leader se ele não deve criar ideias/projetos por aqui
+        if (userRole != UserRole.LEADER) {
+            NestFab(
+                onClick = onFabClick,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 
@@ -120,6 +141,7 @@ private fun RowScope.NestNavItem(
                     UserRole.MANAGER -> "manager/projects"
                     UserRole.LEADER -> "leader/projects"
                 }
+                NavItem.USERS -> "leader/users"
                 NavItem.PROFILE -> "profile"
             }
             onNavigate(route)
@@ -167,9 +189,8 @@ fun BottomNavBarPreview() {
             bottomBar = {
                 NestBottomNavBar(
                     currentRoute = currentItem,
-                    userRole = UserRole.MANAGER, // Simulando o acesso como Gestora
+                    userRole = UserRole.MANAGER,
                     onNavigate = { route ->
-                        // Simulação de atualização visual no Preview
                         currentItem = when (route) {
                             "manager/home" -> NavItem.HOME
                             "manager/ideas" -> NavItem.IDEAS
