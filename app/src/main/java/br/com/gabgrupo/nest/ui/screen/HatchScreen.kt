@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.theme.NestBackground
@@ -59,7 +60,7 @@ fun HatchScreen(
 ) {
     HatchScreenContent(
         ideaTitle = "Reduzir tempo de check-in dos passageiros",
-        currentStep = 2, // 1: Recebida, 2: Em análise, 3: Em validação, 4: Decisão final
+        currentStep = 2,
         onNavigate = onNavigate
     )
 }
@@ -86,15 +87,8 @@ private fun HatchScreenContent(
         bottomBar = {
             NestBottomNavBar(
                 currentRoute = NavItem.IDEAS,
-                onNavigate = { navItem ->
-                    val route = when (navItem) {
-                        NavItem.HOME -> "operator/home"
-                        NavItem.IDEAS -> "operator/ideas"
-                        NavItem.PROJECTS -> "operator/projects"
-                        NavItem.PROFILE -> "operator/profile"
-                    }
-                    onNavigate(route)
-                },
+                userRole = UserRole.OPERATOR,
+                onNavigate = onNavigate,
                 onFabClick = { onNavigate("operator/ideas/new") }
             )
         },
@@ -304,7 +298,7 @@ private fun TimelineItem(
                     fontSize = 11.sp,
                     color = NestTextSecondary,
 
-                )
+                    )
             }
         }
     }

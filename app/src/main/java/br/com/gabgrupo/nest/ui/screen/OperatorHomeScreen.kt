@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.theme.NestBackground
@@ -78,15 +79,8 @@ private fun OperatorHomeScreenContent(
         bottomBar = {
             NestBottomNavBar(
                 currentRoute = NavItem.HOME,
-                onNavigate = { navItem ->
-                    val route = when (navItem) {
-                        NavItem.HOME -> "operator/home"
-                        NavItem.IDEAS -> "operator/ideas"
-                        NavItem.PROJECTS -> "operator/projects"
-                        NavItem.PROFILE -> "operator/profile"
-                    }
-                    onNavigate(route)
-                },
+                userRole = UserRole.OPERATOR,
+                onNavigate = onNavigate,
                 onFabClick = { onNavigate("operator/ideas/new") }
             )
         },

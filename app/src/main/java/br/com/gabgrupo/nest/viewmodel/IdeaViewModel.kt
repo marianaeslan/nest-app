@@ -79,6 +79,11 @@ class IdeaViewModel @Inject constructor(
     fun resetActionState() {
         _actionState.value = IdeaActionState.Idle
     }
+
+    fun submitIdea(title: String, description: String) {
+        val request = IdeaRequest(title, description)
+        createIdea(request)
+    }
 }
 
 sealed class IdeaListState {

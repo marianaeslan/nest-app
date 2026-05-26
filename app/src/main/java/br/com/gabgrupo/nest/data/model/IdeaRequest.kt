@@ -4,4 +4,3 @@ data class IdeaRequest(
     val title: String,
     val description: String
 )
-

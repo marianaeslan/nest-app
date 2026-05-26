@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.ui.theme.NestGold
 import br.com.gabgrupo.nest.ui.theme.NestNavy
 import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
@@ -47,11 +48,11 @@ enum class NavItem(val title: String, val icon: ImageVector) {
 @Composable
 fun NestBottomNavBar(
     currentRoute: NavItem,
-    onNavigate: (NavItem) -> Unit,
+    userRole: UserRole,
+    onNavigate: (String) -> Unit,
     onFabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Correção: O Box agora ocupa a largura máxima com fillMaxWidth()
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
         NavigationBar(
             containerColor = NestWhite,
@@ -59,12 +60,15 @@ fun NestBottomNavBar(
         ) {
             val items = NavItem.entries.toTypedArray()
 
-            // As 2 primeiras ações
             items.take(2).forEach { item ->
-                NestNavItem(item, currentRoute == item, onNavigate)
+                NestNavItem(
+                    item = item,
+                    isSelected = currentRoute == item,
+                    userRole = userRole,
+                    onNavigate = onNavigate
+                )
             }
 
-            // Espaço central vazio reservado para o FAB
             NavigationBarItem(
                 selected = false,
                 onClick = { },
@@ -73,13 +77,16 @@ fun NestBottomNavBar(
                 enabled = false
             )
 
-            // As 2 últimas ações
             items.drop(2).forEach { item ->
-                NestNavItem(item, currentRoute == item, onNavigate)
+                NestNavItem(
+                    item = item,
+                    isSelected = currentRoute == item,
+                    userRole = userRole,
+                    onNavigate = onNavigate
+                )
             }
         }
 
-        // O FAB centralizado e sobreposto à barra
         NestFab(
             onClick = onFabClick,
             modifier = Modifier.align(Alignment.Center)
@@ -91,11 +98,32 @@ fun NestBottomNavBar(
 private fun RowScope.NestNavItem(
     item: NavItem,
     isSelected: Boolean,
-    onClick: (NavItem) -> Unit
+    userRole: UserRole,
+    onNavigate: (String) -> Unit
 ) {
     NavigationBarItem(
         selected = isSelected,
-        onClick = { onClick(item) },
+        onClick = {
+            val route = when (item) {
+                NavItem.HOME -> when (userRole) {
+                    UserRole.OPERATOR -> "operator/home"
+                    UserRole.MANAGER -> "manager/home"
+                    UserRole.LEADER -> "leader/dashboard"
+                }
+                NavItem.IDEAS -> when (userRole) {
+                    UserRole.OPERATOR -> "operator/ideas"
+                    UserRole.MANAGER -> "manager/ideas"
+                    UserRole.LEADER -> "manager/ideas"
+                }
+                NavItem.PROJECTS -> when (userRole) {
+                    UserRole.OPERATOR -> "operator/projects"
+                    UserRole.MANAGER -> "manager/projects"
+                    UserRole.LEADER -> "leader/projects"
+                }
+                NavItem.PROFILE -> "profile"
+            }
+            onNavigate(route)
+        },
         icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
         label = { Text(item.title) },
         colors = NavigationBarItemDefaults.colors(
@@ -139,15 +167,24 @@ fun BottomNavBarPreview() {
             bottomBar = {
                 NestBottomNavBar(
                     currentRoute = currentItem,
-                    onNavigate = { currentItem = it },
+                    userRole = UserRole.MANAGER, // Simulando o acesso como Gestora
+                    onNavigate = { route ->
+                        // Simulação de atualização visual no Preview
+                        currentItem = when (route) {
+                            "manager/home" -> NavItem.HOME
+                            "manager/ideas" -> NavItem.IDEAS
+                            "manager/projects" -> NavItem.PROJECTS
+                            "profile" -> NavItem.PROFILE
+                            else -> NavItem.HOME
+                        }
+                    },
                     onFabClick = {}
                 )
             }
         ) { innerPadding ->
-
             Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
                 Text(
-                    text = "Conteúdo Principal",
+                    text = "Navegando para: Tela atual",
                     modifier = Modifier.padding(16.dp),
                     color = NestNavy
                 )

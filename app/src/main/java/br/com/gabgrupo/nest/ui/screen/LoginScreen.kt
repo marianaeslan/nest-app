@@ -39,13 +39,14 @@ import br.com.gabgrupo.nest.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String, String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
-            onLoginSuccess((state as AuthState.Success).role)
+            val successState = state as AuthState.Success
+            onLoginSuccess(successState.role, successState.name)
         }
     }
 
