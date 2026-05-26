@@ -38,12 +38,13 @@ import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.viewmodel.AuthState
 import br.com.gabgrupo.nest.viewmodel.AuthViewModel
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsState()
     LoginScreenContent(
         state = state,
         onLogin = { email, password -> viewModel.login(email, password) }

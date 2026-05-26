@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.gabgrupo.nest.data.model.IdeaReviewRequest
+import br.com.gabgrupo.nest.ui.leader.LeaderScreen
 import br.com.gabgrupo.nest.ui.screen.CreateIdeaScreen
 import br.com.gabgrupo.nest.ui.screen.HatchScreen
 import br.com.gabgrupo.nest.ui.screen.LoginScreen
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("dashboard") {
+                            LeaderScreen()
 
                         }
 

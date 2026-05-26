@@ -21,6 +21,16 @@ class AuthViewModel @Inject constructor(
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state.asStateFlow()
 
+//    fun login(email: String, password: String) {
+//        viewModelScope.launch {
+//            tokenDataStore.saveToken("mock-token")
+//            tokenDataStore.saveRole("LEADER")
+//            tokenDataStore.saveUserId(1L)
+//            tokenDataStore.saveName("Marcola beicola")
+//            _state.value = AuthState.Success(role = "LEADER", name = "Líder Teste")
+//
+//        }
+
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
             _state.value = AuthState.Error("Informe e-mail e senha.")
