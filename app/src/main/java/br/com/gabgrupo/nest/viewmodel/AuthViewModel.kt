@@ -41,13 +41,14 @@ class AuthViewModel @Inject constructor(
             _state.value = AuthState.Loading
 
             val result = authRepository.login(AuthRequest(email.trim(), password))
-
             result.onSuccess { response ->
                 tokenDataStore.saveToken(response.token)
                 tokenDataStore.saveRole(response.role.name)
                 tokenDataStore.saveUserId(response.userId)
                 tokenDataStore.saveName(response.name)
                 _state.value = AuthState.Success(response.role.name, response.name)
+            }.onFailure { error ->
+                _state.value = AuthState.Error(error.message ?: "Erro ao realizar login.")
             }
         }
     }

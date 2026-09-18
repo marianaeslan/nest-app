@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -21,7 +20,7 @@ class TokenDataStore @Inject constructor(
 ) {
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
     private val ROLE_KEY = stringPreferencesKey("user_role")
-    private val USER_ID_KEY = longPreferencesKey("user_id")
+    private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val NAME_KEY = stringPreferencesKey("user_name")
 
     suspend fun saveToken(token: String) {
@@ -40,11 +39,11 @@ class TokenDataStore @Inject constructor(
         return context.dataStore.data.map { prefs -> prefs[ROLE_KEY] }.first()
     }
 
-    suspend fun saveUserId(id: Long) {
+    suspend fun saveUserId(id: String) {
         context.dataStore.edit { prefs -> prefs[USER_ID_KEY] = id }
     }
 
-    suspend fun getUserId(): Long? {
+    suspend fun getUserId(): String? {
         return context.dataStore.data.map { prefs -> prefs[USER_ID_KEY] }.first()
     }
 

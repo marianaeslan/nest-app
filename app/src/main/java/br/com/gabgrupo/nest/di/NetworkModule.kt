@@ -23,22 +23,27 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
     private const val EMULATOR_BASE_URL = "http://10.0.2.2:8080/"
-    private const val DEVICE_BASE_URL = "http://<IP_DA_MAQUINA>:8080/"
 
     @Provides
     @Singleton
     fun provideAuthInterceptor(tokenDataStore: TokenDataStore): Interceptor {
         return Interceptor { chain ->
+            val request = chain.request()
+            
+            if (request.url.encodedPath.contains("/api/auth/")) {
+                return@Interceptor chain.proceed(request)
+            }
+
             val token = runBlocking { tokenDataStore.getToken() }
-            val request = if (!token.isNullOrBlank()) {
-                chain.request().newBuilder()
+            val newRequest = if (!token.isNullOrBlank()) {
+                request.newBuilder()
                     .addHeader("Authorization", "Bearer $token")
                     .build()
             } else {
-                chain.request()
+                request
             }
 
-            chain.proceed(request)
+            chain.proceed(newRequest)
         }
     }
 
