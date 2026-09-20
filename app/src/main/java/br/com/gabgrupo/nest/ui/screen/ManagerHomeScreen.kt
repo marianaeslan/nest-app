@@ -247,7 +247,7 @@ fun ManagerHomeScreen(
         },
         bottomBar = {
             NestBottomNavBar(
-                currentRoute = NavItem.IDEAS,
+                currentRoute = NavItem.HOME,
                 userRole = UserRole.MANAGER,
                 onNavigate = onNavigate,
                 onFabClick = { onNavigate("manager/projects/new") }

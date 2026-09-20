@@ -54,7 +54,7 @@ fun NestBottomNavBar(
         ) {
             val items = when (userRole) {
                 UserRole.LEADER -> listOf(NavItem.HOME, NavItem.PROJECTS, NavItem.GUIDELINES, NavItem.PROFILE)
-                UserRole.MANAGER -> listOf(NavItem.HOME, NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
+                UserRole.MANAGER -> listOf(NavItem.HOME, NavItem.PROJECTS, NavItem.PROFILE)
                 else -> listOf(NavItem.HOME, NavItem.IDEAS, NavItem.PROJECTS, NavItem.PROFILE)
             }
 
