@@ -24,7 +24,6 @@ import br.com.gabgrupo.nest.ui.screen.CreateIdeaScreen
 import br.com.gabgrupo.nest.ui.screen.HatchScreen
 import br.com.gabgrupo.nest.ui.screen.LoginScreen
 import br.com.gabgrupo.nest.ui.screen.OperatorHomeScreen
-import br.com.gabgrupo.nest.ui.screen.OperatorIdeasScreen
 import br.com.gabgrupo.nest.ui.screen.ManagerHomeScreen
 import br.com.gabgrupo.nest.ui.screen.ManagerProjectsScreen
 import br.com.gabgrupo.nest.ui.screen.LeaderGuidelinesScreen
@@ -105,12 +104,6 @@ class MainActivity : ComponentActivity() {
 
                         composable("operator/home") {
                             OperatorHomeScreen(
-                                onNavigate = { route -> navController.navigate(route) }
-                            )
-                        }
-
-                        composable("operator/ideas") {
-                            OperatorIdeasScreen(
                                 onNavigate = { route -> navController.navigate(route) }
                             )
                         }

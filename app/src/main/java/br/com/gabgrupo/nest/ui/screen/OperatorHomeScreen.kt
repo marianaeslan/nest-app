@@ -236,7 +236,7 @@ private fun OperatorHomeScreenContent(
                         fontSize = 13.sp,
                         color = NestTextSecondary,
                         modifier = Modifier.clickable {
-                            onNavigate("operator/ideas")
+                            onNavigate("operator/ideas/overview")
                         }
                     )
                 }
