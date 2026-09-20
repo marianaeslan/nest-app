@@ -6,11 +6,11 @@ enum class UserRole {
     LEADER
 }
 
-enum class IdeaStatus {
-    PENDING,
-    PRIORITIZED,
-    APPROVED,
-    REJECTED
+enum class IdeaStatus(val label: String) {
+    PENDING("Em análise"),
+    PRIORITIZED("Priorizada"),
+    APPROVED("Aprovada"),
+    REJECTED("Arquivada")
 }
 
 enum class ProjectStatus {
@@ -28,4 +28,3 @@ enum class ProjectStage {
     MONITORING,
     COMPLETED
 }
-

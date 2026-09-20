@@ -36,7 +36,6 @@ import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.data.model.UserSummary
 import br.com.gabgrupo.nest.data.model.IdeaStatus as ApiIdeaStatus
 import br.com.gabgrupo.nest.ui.shared.IdeaCard
-import br.com.gabgrupo.nest.ui.shared.IdeaStatus as UiIdeaStatus
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.shared.NestTabRow
@@ -142,7 +141,7 @@ fun ManagerHomeScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = ideaToReview?.status?.name ?: "",
+                                text = ideaToReview?.status?.label ?: "", // Usando .label aqui
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = NestGold,
                                 fontWeight = FontWeight.Bold
@@ -293,16 +292,9 @@ fun ManagerHomeScreen(
             }
 
             items(filteredIdeas) { idea ->
-                val ideaStatus = when (idea.status) {
-                    ApiIdeaStatus.PENDING -> UiIdeaStatus.PENDING
-                    ApiIdeaStatus.PRIORITIZED -> UiIdeaStatus.PRIORITIZED
-                    ApiIdeaStatus.APPROVED -> UiIdeaStatus.APPROVED
-                    ApiIdeaStatus.REJECTED -> UiIdeaStatus.REJECTED
-                }
-
                 IdeaCard(
                     title = idea.title,
-                    status = ideaStatus,
+                    status = idea.status,
                     onClick = { ideaToReview = idea },
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )

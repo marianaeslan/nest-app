@@ -85,7 +85,7 @@ fun OperatorIdeasScreen(
         },
         bottomBar = {
             NestBottomNavBar(
-                currentRoute = NavItem.IDEAS,
+                currentRoute = NavItem.HOME,
                 userRole = UserRole.OPERATOR,
                 onNavigate = onNavigate,
                 onFabClick = { onNavigate("operator/ideas/new") }
@@ -115,8 +115,9 @@ fun OperatorIdeasScreen(
                         ) {
                             Text(idea.title, color = NestNavy, style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
                             Text(idea.description, color = NestTextSecondary)
+                            // Aplicando o label padrão do IdeaStatus
                             Text(
-                                "Status: ${idea.status.name}",
+                                "Status: ${idea.status.label}",
                                 color = when (idea.status) {
                                     IdeaStatus.PENDING -> Color(0xFFB7791F)
                                     IdeaStatus.PRIORITIZED -> NestGold

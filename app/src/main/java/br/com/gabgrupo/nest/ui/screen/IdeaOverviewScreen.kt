@@ -85,7 +85,8 @@ fun IdeaOverviewScreen(
                         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
                             Text(idea.title, color = NestNavy, style = MaterialTheme.typography.titleMedium)
                             Text(idea.submittedBy.name, color = NestTextSecondary)
-                            Text("${journeyLabel(idea.status)} | ${idea.status.name}", color = statusColor(idea.status))
+                            // Usando idea.status.label para manter o padrão amigável
+                            Text("${journeyLabel(idea.status)} | ${idea.status.label}", color = statusColor(idea.status))
                         }
                     }
                 }

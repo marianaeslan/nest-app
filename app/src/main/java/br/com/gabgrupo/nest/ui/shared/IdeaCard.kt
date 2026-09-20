@@ -10,12 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import br.com.gabgrupo.nest.data.model.IdeaStatus
 import br.com.gabgrupo.nest.ui.theme.NestGold
 import br.com.gabgrupo.nest.ui.theme.NestNavy
 import br.com.gabgrupo.nest.ui.theme.NestTheme
@@ -74,6 +74,7 @@ fun IdeaCard(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // O StatusBadge agora exibe o label amigável configurado no Enum
                 StatusBadge(status = status)
             }
 
@@ -114,11 +115,10 @@ fun IdeaCardPreview() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             IdeaCard(
-                title = "Novo layout do escritório",
-                status = IdeaStatus.DRAFT,
+                title = "Otimização de Processos Logísticos",
+                status = IdeaStatus.PRIORITIZED,
                 onClick = {}
             )
         }
     }
 }
-

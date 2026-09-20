@@ -94,7 +94,7 @@ private fun RowScope.NestNavItem(
                     UserRole.LEADER -> "dashboard"
                 }
                 NavItem.IDEAS -> when (userRole) {
-                    UserRole.OPERATOR -> "operator/ideas"
+                    UserRole.OPERATOR -> "operator/ideas/overview"
                     UserRole.MANAGER -> "manager/home"
                     UserRole.LEADER -> "dashboard"
                 }
