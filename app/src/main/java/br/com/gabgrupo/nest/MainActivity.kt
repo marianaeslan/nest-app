@@ -24,7 +24,14 @@ import br.com.gabgrupo.nest.ui.screen.CreateIdeaScreen
 import br.com.gabgrupo.nest.ui.screen.HatchScreen
 import br.com.gabgrupo.nest.ui.screen.LoginScreen
 import br.com.gabgrupo.nest.ui.screen.OperatorHomeScreen
+import br.com.gabgrupo.nest.ui.screen.OperatorIdeasScreen
 import br.com.gabgrupo.nest.ui.screen.ManagerHomeScreen
+import br.com.gabgrupo.nest.ui.screen.ManagerProjectsScreen
+import br.com.gabgrupo.nest.ui.screen.LeaderGuidelinesScreen
+import br.com.gabgrupo.nest.ui.screen.ProfileScreen
+import br.com.gabgrupo.nest.ui.screen.IdeaOverviewScreen
+import br.com.gabgrupo.nest.ui.screen.OperatorProjectsScreen
+import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.viewmodel.IdeaActionState
 import br.com.gabgrupo.nest.viewmodel.IdeaListState
@@ -32,6 +39,7 @@ import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
 import br.com.gabgrupo.nest.viewmodel.ProjectListState
 import br.com.gabgrupo.nest.viewmodel.ProjectViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import br.com.gabgrupo.nest.data.local.SessionEvents
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,12 +53,25 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val navController = rememberNavController()
                     var userName by rememberSaveable { mutableStateOf("") }
+                    var userRole by rememberSaveable { mutableStateOf(UserRole.OPERATOR) }
+
+                    LaunchedEffect(Unit) {
+                        SessionEvents.expired.collect {
+                            userName = ""
+                            userRole = UserRole.OPERATOR
+                            navController.navigate("login") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
 
                     NavHost(navController = navController, startDestination = "login") {
                         composable("login") {
                             LoginScreen(
                                 onLoginSuccess = { role, name ->
                                     userName = name
+                                    userRole = runCatching { UserRole.valueOf(role.uppercase()) }
+                                        .getOrDefault(UserRole.OPERATOR)
                                     val destination = when (role.uppercase()) {
                                         "LEADER" -> "dashboard"
                                         "GESTOR", "MANAGER" -> "manager/home"
@@ -64,8 +85,22 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("dashboard") {
-                            LeaderHomeScreen()
+                            LeaderHomeScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
 
+                        composable("leader/guidelines") {
+                            LeaderGuidelinesScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
+                        composable("leader/projects") {
+                            ManagerProjectsScreen(
+                                userRole = UserRole.LEADER,
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
                         }
 
                         composable("operator/home") {
@@ -74,11 +109,29 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        composable("operator/ideas") {
+                            OperatorIdeasScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
+                        composable("operator/ideas/overview") {
+                            IdeaOverviewScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
+                        composable("operator/projects") {
+                            OperatorProjectsScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
                         composable("operator/ideas/new") {
                             CreateIdeaScreen(
                                 onNavigateToHatch = {
-                                    navController.navigate("operator/hatch") {
-                                        popUpTo("operator/home")
+                                    navController.navigate("operator/home") {
+                                        popUpTo("operator/home") { inclusive = true }
                                     }
                                 },
                                 onNavigateBack = { navController.popBackStack() }
@@ -124,9 +177,31 @@ class MainActivity : ComponentActivity() {
                                 activeProjectsCount = activeProjectsCount,
                                 ideas = ideas,
                                 onSubmitReview = { id, status ->
-                                    ideaViewModel.reviewIdea(id, IdeaReviewRequest(status, 1))
+                                    val priority = if (status == IdeaStatus.REJECTED) null else 1
+                                    ideaViewModel.reviewIdea(id, IdeaReviewRequest(status, priority))
                                 },
                                 onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
+                        composable("manager/projects") {
+                            ManagerProjectsScreen(
+                                onNavigate = { route -> navController.navigate(route) }
+                            )
+                        }
+
+                        composable("profile") {
+                            ProfileScreen(
+                                name = userName,
+                                role = userRole,
+                                onNavigate = { route -> navController.navigate(route) },
+                                onLogout = {
+                                    userName = ""
+                                    userRole = UserRole.OPERATOR
+                                    navController.navigate("login") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
                             )
                         }
                     }

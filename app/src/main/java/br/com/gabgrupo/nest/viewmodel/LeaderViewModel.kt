@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabgrupo.nest.data.local.TokenDataStore
 import br.com.gabgrupo.nest.data.model.DashboardResponse
+import br.com.gabgrupo.nest.data.model.DashboardGroupResponse
 import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.data.repository.DashboardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,12 @@ class LeaderViewModel @Inject constructor(
 
     private val _dashboard = MutableStateFlow<DashboardResponse?>(null)
     val dashboard: StateFlow<DashboardResponse?> = _dashboard.asStateFlow()
+
+    private val _byGuideline = MutableStateFlow<List<DashboardGroupResponse>>(emptyList())
+    val byGuideline: StateFlow<List<DashboardGroupResponse>> = _byGuideline.asStateFlow()
+
+    private val _byProject = MutableStateFlow<List<DashboardGroupResponse>>(emptyList())
+    val byProject: StateFlow<List<DashboardGroupResponse>> = _byProject.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -56,6 +63,12 @@ class LeaderViewModel @Inject constructor(
             _error.value = null
             dashboardRepository.getDashboard()
                 .onSuccess { _dashboard.value = it }
+                .onFailure { _error.value = it.message }
+            dashboardRepository.getByGuideline()
+                .onSuccess { _byGuideline.value = it }
+                .onFailure { _error.value = it.message }
+            dashboardRepository.getByProject()
+                .onSuccess { _byProject.value = it }
                 .onFailure { _error.value = it.message }
             _isLoading.value = false
         }

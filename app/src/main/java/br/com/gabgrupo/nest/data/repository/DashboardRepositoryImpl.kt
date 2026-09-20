@@ -1,7 +1,9 @@
 package br.com.gabgrupo.nest.data.repository
 
 import br.com.gabgrupo.nest.data.model.DashboardResponse
+import br.com.gabgrupo.nest.data.model.DashboardGroupResponse
 import br.com.gabgrupo.nest.data.remote.DashboardApiService
+import br.com.gabgrupo.nest.data.remote.ApiErrorMessage
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +24,34 @@ class DashboardRepositoryImpl @Inject constructor(
                     Result.failure(Exception("Resposta vazia do servidor."))
                 }
             } else {
-                Result.failure(Exception("Erro ao carregar dashboard. Código: ${response.code()}"))
+                    Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "o dashboard")))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Erro de conexão: verifique sua internet."))
+        }
+    }
+
+    override suspend fun getByGuideline(): Result<List<DashboardGroupResponse>> = fetchGroups(
+        request = { apiService.getByGuideline() },
+        message = "Erro ao carregar métricas por guideline."
+    )
+
+    override suspend fun getByProject(): Result<List<DashboardGroupResponse>> = fetchGroups(
+        request = { apiService.getByProject() },
+        message = "Erro ao carregar métricas por projeto."
+    )
+
+    private suspend fun fetchGroups(
+        request: suspend () -> retrofit2.Response<List<DashboardGroupResponse>>,
+        message: String
+    ): Result<List<DashboardGroupResponse>> {
+        return try {
+            val response = request()
+            if (response.isSuccessful) {
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Resposta vazia do servidor."))
+            } else {
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "as métricas")))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Erro de conexão: verifique sua internet."))

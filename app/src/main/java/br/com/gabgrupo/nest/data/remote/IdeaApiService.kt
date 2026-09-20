@@ -8,6 +8,8 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.DELETE
 import retrofit2.http.Path
 
 interface IdeaApiService {
@@ -17,9 +19,18 @@ interface IdeaApiService {
     @GET("/api/ideas/my")
     suspend fun getMyIdeas(): Response<List<IdeaResponse>>
 
+    @GET("/api/ideas/overview")
+    suspend fun getOverview(): Response<List<IdeaResponse>>
+
     @POST("/api/ideas")
     suspend fun create(@Body request: IdeaRequest): Response<IdeaResponse>
 
+    @PUT("/api/ideas/{id}")
+    suspend fun update(@Path("id") id: String, @Body request: IdeaRequest): Response<IdeaResponse>
+
+    @DELETE("/api/ideas/{id}")
+    suspend fun delete(@Path("id") id: String): Response<Unit>
+
     @PATCH("/api/ideas/{id}/review")
-    suspend fun review(@Path("id") id: Long, @Body request: IdeaReviewRequest): Response<IdeaResponse>
+    suspend fun review(@Path("id") id: String, @Body request: IdeaReviewRequest): Response<IdeaResponse>
 }

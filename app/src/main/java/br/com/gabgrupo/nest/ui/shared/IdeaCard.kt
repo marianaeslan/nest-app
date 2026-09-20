@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -35,8 +34,6 @@ import br.com.gabgrupo.nest.ui.theme.NestWhite
 fun IdeaCard(
     title: String,
     status: IdeaStatus,
-    isFavorite: Boolean,
-    onFavoriteClick: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     categoryIcon: ImageVector = Icons.Default.Lightbulb
@@ -82,14 +79,11 @@ fun IdeaCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Lado Direito: Ícone de Favorito
-            IconButton(onClick = onFavoriteClick) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
-                    contentDescription = if (isFavorite) "Remover dos favoritos" else "Adicionar aos favoritos",
-                    tint = NestGold
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Abrir ideia",
+                tint = NestGold
+            )
         }
     }
 }
@@ -104,32 +98,24 @@ fun IdeaCardPreview() {
             IdeaCard(
                 title = "Redução de Desperdício de Papel",
                 status = IdeaStatus.PENDING,
-                isFavorite = false,
-                onFavoriteClick = {},
                 onClick = {}
             )
             Spacer(modifier = Modifier.height(16.dp))
             IdeaCard(
                 title = "Nova Área de Descanso",
                 status = IdeaStatus.APPROVED,
-                isFavorite = true,
-                onFavoriteClick = {},
                 onClick = {}
             )
             Spacer(modifier = Modifier.height(16.dp))
             IdeaCard(
                 title = "Melhoria no Refeitório",
                 status = IdeaStatus.REJECTED,
-                isFavorite = false,
-                onFavoriteClick = {},
                 onClick = {}
             )
             Spacer(modifier = Modifier.height(16.dp))
             IdeaCard(
                 title = "Novo layout do escritório",
                 status = IdeaStatus.DRAFT,
-                isFavorite = true,
-                onFavoriteClick = {},
                 onClick = {}
             )
         }

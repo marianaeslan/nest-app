@@ -16,8 +16,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -44,16 +47,25 @@ import br.com.gabgrupo.nest.ui.theme.NestNavy
 import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.ui.theme.NestWhite
+import br.com.gabgrupo.nest.data.model.GuidelineResponse
 import br.com.gabgrupo.nest.viewmodel.IdeaActionState
 import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
+import br.com.gabgrupo.nest.viewmodel.GuidelineListState
+import br.com.gabgrupo.nest.viewmodel.GuidelineViewModel
 
 @Composable
 fun CreateIdeaScreen(
     viewModel: IdeaViewModel = hiltViewModel(),
+    guidelineViewModel: GuidelineViewModel = hiltViewModel(),
     onNavigateToHatch: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val actionState by viewModel.actionState.collectAsState()
+    val guidelineState by guidelineViewModel.listState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        guidelineViewModel.getAllGuidelines()
+    }
 
     LaunchedEffect(actionState) {
         if (actionState is IdeaActionState.Success) {
@@ -64,9 +76,11 @@ fun CreateIdeaScreen(
 
     CreateIdeaScreenContent(
         actionState = actionState,
+        guidelines = (guidelineState as? GuidelineListState.Success)?.guidelines.orEmpty(),
+        guidelinesError = (guidelineState as? GuidelineListState.Error)?.message,
         onNavigateBack = onNavigateBack,
-        onSubmit = { title, description ->
-            viewModel.submitIdea(title, description)
+        onSubmit = { title, description, guidelineId ->
+            viewModel.createIdea(br.com.gabgrupo.nest.data.model.IdeaRequest(title, description, guidelineId))
         }
     )
 }
@@ -75,11 +89,16 @@ fun CreateIdeaScreen(
 @Composable
 private fun CreateIdeaScreenContent(
     actionState: IdeaActionState,
+    guidelines: List<GuidelineResponse> = emptyList(),
+    guidelinesError: String? = null,
     onNavigateBack: () -> Unit,
-    onSubmit: (String, String) -> Unit
+    onSubmit: (String, String, String?) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var selectedGuidelineId by remember { mutableStateOf<String?>(null) }
+    var selectedGuidelineTitle by remember { mutableStateOf("Sem guideline") }
+    var guidelineMenuExpanded by remember { mutableStateOf(false) }
 
     val isLoading = actionState is IdeaActionState.Loading
 
@@ -159,6 +178,60 @@ private fun CreateIdeaScreenContent(
                 enabled = !isLoading
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = guidelineMenuExpanded,
+                onExpandedChange = { guidelineMenuExpanded = !guidelineMenuExpanded }
+            ) {
+                OutlinedTextField(
+                    value = selectedGuidelineTitle,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Guideline estratégica") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = guidelineMenuExpanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = NestWhite,
+                        unfocusedContainerColor = NestWhite,
+                        focusedBorderColor = NestGold,
+                        unfocusedBorderColor = Color.Transparent
+                    ),
+                    enabled = !isLoading
+                )
+                ExposedDropdownMenu(
+                    expanded = guidelineMenuExpanded,
+                    onDismissRequest = { guidelineMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Sem guideline") },
+                        onClick = {
+                            selectedGuidelineId = null
+                            selectedGuidelineTitle = "Sem guideline"
+                            guidelineMenuExpanded = false
+                        }
+                    )
+                    guidelines.forEach { guideline ->
+                        DropdownMenuItem(
+                            text = { Text(guideline.title) },
+                            onClick = {
+                                selectedGuidelineId = guideline.id
+                                selectedGuidelineTitle = guideline.title
+                                guidelineMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (guidelinesError != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(guidelinesError, color = Color.Red, fontSize = 12.sp)
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             if (actionState is IdeaActionState.Error) {
@@ -175,7 +248,7 @@ private fun CreateIdeaScreenContent(
 
             Button(
                 onClick = {
-                    onSubmit(title, description)
+                    onSubmit(title, description, selectedGuidelineId)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -213,8 +286,9 @@ private fun CreateIdeaScreenPreview() {
     NestTheme {
         CreateIdeaScreenContent(
             actionState = IdeaActionState.Idle,
+            guidelines = emptyList(),
             onNavigateBack = {},
-            onSubmit = { _, _ -> }
+            onSubmit = { _, _, _ -> }
         )
     }
 }

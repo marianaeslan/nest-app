@@ -2,7 +2,9 @@ package br.com.gabgrupo.nest.data.repository
 
 import br.com.gabgrupo.nest.data.model.GuidelineRequest
 import br.com.gabgrupo.nest.data.model.GuidelineResponse
+import br.com.gabgrupo.nest.data.model.GuidelineHistory
 import br.com.gabgrupo.nest.data.remote.GuidelineApiService
+import br.com.gabgrupo.nest.data.remote.ApiErrorMessage
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +24,7 @@ class GuidelineRepositoryImpl @Inject constructor(
                     Result.failure(Exception("Resposta vazia do servidor."))
                 }
             } else {
-                Result.failure(Exception("Erro ao buscar diretrizes. Código: ${response.code()}"))
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "as diretrizes")))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Erro de conexão: verifique sua internet."))
@@ -40,14 +42,14 @@ class GuidelineRepositoryImpl @Inject constructor(
                     Result.failure(Exception("Resposta vazia do servidor."))
                 }
             } else {
-                Result.failure(Exception("Erro ao criar diretriz. Código: ${response.code()}"))
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "a diretriz")))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Erro de conexão: verifique sua internet."))
         }
     }
 
-    override suspend fun update(id: Long, request: GuidelineRequest): Result<GuidelineResponse> {
+    override suspend fun update(id: String, request: GuidelineRequest): Result<GuidelineResponse> {
         return try {
             val response = apiService.update(id, request)
             if (response.isSuccessful) {
@@ -58,20 +60,34 @@ class GuidelineRepositoryImpl @Inject constructor(
                     Result.failure(Exception("Resposta vazia do servidor."))
                 }
             } else {
-                Result.failure(Exception("Erro ao atualizar diretriz. Código: ${response.code()}"))
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "a diretriz")))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Erro de conexão: verifique sua internet."))
         }
     }
 
-    override suspend fun delete(id: Long): Result<Unit> {
+    override suspend fun delete(id: String): Result<Unit> {
         return try {
             val response = apiService.delete(id)
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Erro ao deletar diretriz. Código: ${response.code()}"))
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "a diretriz")))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Erro de conexão: verifique sua internet."))
+        }
+    }
+
+    override suspend fun getHistory(id: String): Result<List<GuidelineHistory>> {
+        return try {
+            val response = apiService.getHistory(id)
+            if (response.isSuccessful) {
+                response.body()?.let { Result.success(it) }
+                    ?: Result.failure(Exception("Resposta vazia do servidor."))
+            } else {
+                Result.failure(Exception(ApiErrorMessage.forStatus(response.code(), "o histórico")))
             }
         } catch (e: Exception) {
             Result.failure(Exception("Erro de conexão: verifique sua internet."))

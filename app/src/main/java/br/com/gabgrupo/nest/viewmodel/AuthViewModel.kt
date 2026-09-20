@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabgrupo.nest.data.local.TokenDataStore
 import br.com.gabgrupo.nest.data.model.AuthRequest
+import br.com.gabgrupo.nest.data.model.CreateUserRequest
+import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,9 @@ class AuthViewModel @Inject constructor(
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
     val state: StateFlow<AuthState> = _state.asStateFlow()
+
+    private val _userCreationState = MutableStateFlow<UserCreationState>(UserCreationState.Idle)
+    val userCreationState: StateFlow<UserCreationState> = _userCreationState.asStateFlow()
 
 //    fun login(email: String, password: String) {
 //        viewModelScope.launch {
@@ -52,6 +57,26 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun createUser(name: String, email: String, role: UserRole) {
+        viewModelScope.launch {
+            _userCreationState.value = UserCreationState.Loading
+            authRepository.createUser(CreateUserRequest(name.trim(), email.trim(), role))
+                .onSuccess { _userCreationState.value = UserCreationState.Success(it) }
+                .onFailure { _userCreationState.value = UserCreationState.Error(it.message ?: "Erro ao criar colaborador.") }
+        }
+    }
+
+    fun resetUserCreationState() {
+        _userCreationState.value = UserCreationState.Idle
+    }
+
+    fun logout(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            tokenDataStore.clearAll()
+            onComplete()
+        }
+    }
 }
 
 sealed class AuthState {
@@ -59,4 +84,11 @@ sealed class AuthState {
     data object Loading : AuthState()
     data class Success(val role: String, val name: String) : AuthState()
     data class Error(val message: String) : AuthState()
+}
+
+sealed class UserCreationState {
+    data object Idle : UserCreationState()
+    data object Loading : UserCreationState()
+    data class Success(val user: br.com.gabgrupo.nest.data.model.AuthResponse) : UserCreationState()
+    data class Error(val message: String) : UserCreationState()
 }

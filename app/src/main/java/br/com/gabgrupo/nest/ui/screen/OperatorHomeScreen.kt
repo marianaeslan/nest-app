@@ -30,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.gabgrupo.nest.data.model.UserRole
+import br.com.gabgrupo.nest.data.model.IdeaResponse
+import br.com.gabgrupo.nest.data.model.IdeaStatus
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.theme.NestBackground
@@ -55,16 +58,27 @@ import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.ui.theme.StatusPending
 import br.com.gabgrupo.nest.viewmodel.HomeViewModel
+import br.com.gabgrupo.nest.viewmodel.IdeaListState
+import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
 
 @Composable
 fun OperatorHomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    ideaViewModel: IdeaViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit
 ) {
     val userName by viewModel.userName.collectAsState()
+    val ideaState by ideaViewModel.listState.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        ideaViewModel.getMyIdeas()
+    }
 
     OperatorHomeScreenContent(
         userName = userName,
+        ideas = (ideaState as? IdeaListState.Success)?.ideas.orEmpty(),
+        isLoadingIdeas = ideaState is IdeaListState.Loading,
+        ideasError = (ideaState as? IdeaListState.Error)?.message,
         onNavigate = onNavigate
     )
 }
@@ -72,6 +86,9 @@ fun OperatorHomeScreen(
 @Composable
 private fun OperatorHomeScreenContent(
     userName: String,
+    ideas: List<IdeaResponse>,
+    isLoadingIdeas: Boolean,
+    ideasError: String?,
     onNavigate: (String) -> Unit
 ) {
     Scaffold(
@@ -136,7 +153,7 @@ private fun OperatorHomeScreenContent(
                     text = "Ver todas",
                     fontSize = 12.sp,
                     color = NestTextSecondary,
-                    modifier = Modifier.clickable { }
+                    modifier = Modifier.clickable { onNavigate("operator/ideas/overview") }
                 )
             }
 
@@ -146,10 +163,10 @@ private fun OperatorHomeScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                JourneyItem(icon = Icons.Default.Lightbulb, title = "Capture", subtitle = "12 ideias", color = NestNavy)
-                JourneyItem(icon = Icons.Default.Autorenew, title = "Hatch", subtitle = "5 em análise", color = NestNavy)
-                JourneyItem(icon = Icons.Default.FlightTakeoff, title = "Flight", subtitle = "3 em execução", color = NestNavy)
-                JourneyItem(icon = Icons.Default.EmojiEvents, title = "Impact", subtitle = "8 resultados", color = StatusPending)
+                JourneyItem(icon = Icons.Default.Lightbulb, title = "Capture", subtitle = "${ideas.size} ideias", color = NestNavy)
+                JourneyItem(icon = Icons.Default.Autorenew, title = "Hatch", subtitle = "${ideas.count { it.status == IdeaStatus.PENDING }} em análise", color = NestNavy)
+                JourneyItem(icon = Icons.Default.FlightTakeoff, title = "Flight", subtitle = "${ideas.count { it.status == IdeaStatus.APPROVED }} aprovadas", color = NestNavy)
+                JourneyItem(icon = Icons.Default.EmojiEvents, title = "Impact", subtitle = "${ideas.count { it.status == IdeaStatus.REJECTED }} rejeitadas", color = StatusPending)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -163,25 +180,31 @@ private fun OperatorHomeScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            ActivityCard(
-                icon = Icons.Default.Autorenew,
-                status = "Ideia em análise",
-                title = "Reduzir tempo de check-in",
-                subtitle = "há 2 dias",
-                progress = null,
-                onClick = { }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            ActivityCard(
-                icon = Icons.Default.FlightTakeoff,
-                status = "Projeto em andamento",
-                title = "Otimização de roteirização",
-                subtitle = "65% concluído",
-                progress = 0.65f,
-                onClick = { }
-            )
+            when {
+                isLoadingIdeas -> Text("Carregando suas ideias...", color = NestTextSecondary)
+                ideasError != null -> Text(ideasError, color = MaterialTheme.colorScheme.error)
+                ideas.isEmpty() -> Text("Você ainda não cadastrou ideias.", color = NestTextSecondary)
+                else -> ideas
+                    .sortedByDescending { it.createdAt.orEmpty() }
+                    .take(3)
+                    .forEach { idea ->
+                    ActivityCard(
+                        icon = if (idea.status == IdeaStatus.APPROVED) Icons.Default.FlightTakeoff else Icons.Default.Autorenew,
+                        status = idea.status.name,
+                        title = idea.title,
+                        subtitle = idea.guidelineId?.let { "Guideline vinculada" } ?: "Sem guideline vinculada",
+                        progress = null,
+                        statusColor = when (idea.status) {
+                            IdeaStatus.PENDING -> Color(0xFFB7791F)
+                            IdeaStatus.PRIORITIZED -> NestGold
+                            IdeaStatus.APPROVED -> Color(0xFF16825D)
+                            IdeaStatus.REJECTED -> Color(0xFFB3261E)
+                        },
+                        onClick = { }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -247,6 +270,7 @@ private fun ActivityCard(
     title: String,
     subtitle: String,
     progress: Float?,
+    statusColor: Color = NestTextSecondary,
     onClick: () -> Unit
 ) {
     Card(
@@ -271,7 +295,7 @@ private fun ActivityCard(
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = status, fontSize = 10.sp, color = NestTextSecondary)
+                Text(text = status, fontSize = 10.sp, color = statusColor)
                 Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = NestNavy)
                 Text(text = subtitle, fontSize = 12.sp, color = NestTextSecondary)
                 if (progress != null) {
@@ -303,6 +327,9 @@ private fun OperatorHomeScreenPreview() {
     NestTheme {
         OperatorHomeScreenContent(
             userName = "Marcos",
+            ideas = emptyList(),
+            isLoadingIdeas = false,
+            ideasError = null,
             onNavigate = {}
         )
     }

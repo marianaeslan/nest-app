@@ -60,13 +60,13 @@ fun ManagerHomeScreen(
     pendingIdeasCount: Int = 0,
     activeProjectsCount: Int = 0,
     ideas: List<IdeaResponse> = emptyList(),
-    onSubmitReview: (Long, ApiIdeaStatus) -> Unit,
+    onSubmitReview: (String, ApiIdeaStatus) -> Unit,
     onNavigate: (String) -> Unit
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var ideaToReview by remember { mutableStateOf<IdeaResponse?>(null) }
 
-    val tabs = listOf("Pendentes", "Todas", "Aprovadas")
+    val tabs = listOf("Pendentes", "Priorizadas", "Aprovadas", "Todas")
     val firstName = userName.split(" ").firstOrNull() ?: userName
 
     val formattedDate = remember(ideaToReview?.createdAt) {
@@ -91,14 +91,16 @@ fun ManagerHomeScreen(
     val filteredIdeas = ideas.filter { idea ->
         when (selectedTabIndex) {
             0 -> idea.status == ApiIdeaStatus.PENDING
-            1 -> true
-            2 -> idea.status == ApiIdeaStatus.APPROVED || idea.status == ApiIdeaStatus.PRIORITIZED
+            1 -> idea.status == ApiIdeaStatus.PRIORITIZED
+            2 -> idea.status == ApiIdeaStatus.APPROVED
+            3 -> true
             else -> true
         }
     }
 
     if (ideaToReview != null) {
         val isPending = ideaToReview?.status == ApiIdeaStatus.PENDING
+        val isReviewable = isPending || ideaToReview?.status == ApiIdeaStatus.PRIORITIZED
 
         AlertDialog(
             onDismissRequest = { ideaToReview = null },
@@ -183,15 +185,20 @@ fun ManagerHomeScreen(
                 }
             },
             confirmButton = {
-                if (isPending) {
+                if (isReviewable) {
                     Button(
                         onClick = {
-                            onSubmitReview(ideaToReview!!.id, ApiIdeaStatus.APPROVED)
+                            val nextStatus = if (isPending) {
+                                ApiIdeaStatus.PRIORITIZED
+                            } else {
+                                ApiIdeaStatus.APPROVED
+                            }
+                            onSubmitReview(ideaToReview!!.id, nextStatus)
                             ideaToReview = null
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                     ) {
-                        Text("Aprovar", color = NestWhite)
+                        Text(if (isPending) "Priorizar" else "Aprovar", color = NestWhite)
                     }
                 } else {
                     Button(
@@ -203,7 +210,7 @@ fun ManagerHomeScreen(
                 }
             },
             dismissButton = {
-                if (isPending) {
+                if (isReviewable) {
                     Button(
                         onClick = {
                             onSubmitReview(ideaToReview!!.id, ApiIdeaStatus.REJECTED)
@@ -288,16 +295,14 @@ fun ManagerHomeScreen(
             items(filteredIdeas) { idea ->
                 val ideaStatus = when (idea.status) {
                     ApiIdeaStatus.PENDING -> UiIdeaStatus.PENDING
-                    ApiIdeaStatus.APPROVED,
-                    ApiIdeaStatus.PRIORITIZED -> UiIdeaStatus.APPROVED
+                    ApiIdeaStatus.PRIORITIZED -> UiIdeaStatus.PRIORITIZED
+                    ApiIdeaStatus.APPROVED -> UiIdeaStatus.APPROVED
                     ApiIdeaStatus.REJECTED -> UiIdeaStatus.REJECTED
                 }
 
                 IdeaCard(
                     title = idea.title,
                     status = ideaStatus,
-                    isFavorite = false,
-                    onFavoriteClick = { },
                     onClick = { ideaToReview = idea },
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
@@ -330,10 +335,10 @@ private fun SummaryCard(title: String, count: String, modifier: Modifier = Modif
 @Preview(showBackground = true)
 @Composable
 private fun ManagerHomeScreenPreview() {
-    val mockUser = UserSummary(id = 1L, name = "Colaborador Teste", role = UserRole.OPERATOR)
+    val mockUser = UserSummary(id = "user-preview", name = "Colaborador Teste", role = UserRole.OPERATOR)
     val mockIdeas = listOf(
         IdeaResponse(
-            id = 1L,
+            id = "12asd123",
             title = "Reduzir tempo de check-in dos passageiros",
             description = "Durante os horários de pico, o check-in manual causa filas.",
             status = ApiIdeaStatus.PENDING,

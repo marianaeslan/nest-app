@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.gabgrupo.nest.data.model.ProjectSummary
+import br.com.gabgrupo.nest.data.model.DashboardGroupResponse
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
 import br.com.gabgrupo.nest.ui.shared.NestTopAppBar
@@ -35,13 +36,17 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun LeaderHomeScreen(viewModel: LeaderViewModel = hiltViewModel()) {
-    var currentNav by remember { mutableStateOf(NavItem.PROJECTS) }
+fun LeaderHomeScreen(
+    onNavigate: (String) -> Unit = {},
+    viewModel: LeaderViewModel = hiltViewModel()
+) {
     val userName by viewModel.userName.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
     val dashboard by viewModel.dashboard.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
+    val byGuideline by viewModel.byGuideline.collectAsState()
+    val byProject by viewModel.byProject.collectAsState()
 
     Scaffold(
         topBar = {
@@ -68,17 +73,9 @@ fun LeaderHomeScreen(viewModel: LeaderViewModel = hiltViewModel()) {
         },
         bottomBar = {
             NestBottomNavBar(
-                currentRoute = currentNav,
+                currentRoute = NavItem.HOME,
                 userRole = userRole,
-                onNavigate = { route ->
-                    currentNav = when (route) {
-                        "leader/dashboard" -> NavItem.HOME
-                        "leader/projects" -> NavItem.PROJECTS
-                        "leader/users" -> NavItem.USERS
-                        "profile" -> NavItem.PROFILE
-                        else -> NavItem.HOME
-                    }
-                },
+                onNavigate = onNavigate,
                 onFabClick = {}
             )
         }
@@ -140,23 +137,23 @@ fun LeaderHomeScreen(viewModel: LeaderViewModel = hiltViewModel()) {
                     // Gráfico de Rosca — Impacto por Categoria
                     item {
                         SectionHeader(
-                            title = "Impacto por categoria",
+                            title = "Impacto por guideline",
                             actionText = "",
                             onActionClick = {}
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        ImpactDonutChart()
+                        ImpactDonutChart(groups = byGuideline)
                     }
 
                     // Gráfico de Linha — Evolução do ROI
                     item {
                         SectionHeader(
-                            title = "Evolução do ROI",
+                            title = "Retorno por projeto",
                             actionText = "",
                             onActionClick = {}
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        RoiLineChart(targetRoi = dashboard?.totalRoi ?: 245.0)
+                        RoiLineChart(groups = byProject)
                     }
 
                     // Projetos
@@ -164,7 +161,7 @@ fun LeaderHomeScreen(viewModel: LeaderViewModel = hiltViewModel()) {
                         SectionHeader(
                             title = "Projetos em Andamento",
                             actionText = "Ver todos",
-                            onActionClick = {}
+                            onActionClick = {onNavigate("leader/projects")}
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                     }
@@ -284,13 +281,19 @@ fun KpiGridSkeleton() {
 // ── Donut Chart ───────────────────────────────────────────────────────────────
 
 @Composable
-fun ImpactDonutChart() {
-    val categories = listOf(
-        "Operações" to 45f,
-        "Exp. cliente" to 25f,
-        "Tecnologia" to 20f,
-        "Outros" to 10f
-    )
+fun ImpactDonutChart(groups: List<DashboardGroupResponse>) {
+    if (groups.isEmpty()) {
+        Text("Sem dados agrupados por guideline.", color = NestTextSecondary)
+        return
+    }
+
+    val categories = groups.take(6).map { group ->
+        (group.id ?: "Sem guideline") to (group.totalActualReturn ?: group.totalInvestment ?: 0.0).toFloat()
+    }.filter { it.second > 0f }
+    if (categories.isEmpty()) {
+        Text("Sem retorno financeiro registrado.", color = NestTextSecondary)
+        return
+    }
     val colors = listOf(
         Color.parseColor("#0D1B3E"),
         Color.parseColor("#10B981"),
@@ -372,13 +375,15 @@ fun ImpactDonutChart() {
 // ── Line Chart ────────────────────────────────────────────────────────────────
 
 @Composable
-fun RoiLineChart(targetRoi: Double) {
-    val months = listOf("Jan", "Fev", "Mar", "Abr", "Mai", "Jun")
-
-    val percentages = listOf(0.05, 0.15, 0.35, 0.55, 0.75, 1.0)
-    val values = percentages.map { pct ->
-        (targetRoi.coerceAtLeast(0.0) * pct).toFloat()
+fun RoiLineChart(groups: List<DashboardGroupResponse>) {
+    if (groups.isEmpty()) {
+        Text("Sem dados agrupados por projeto.", color = NestTextSecondary)
+        return
     }
+
+    val projectGroups = groups.take(8)
+    val labels = projectGroups.map { it.id?.takeLast(6) ?: "Projeto" }
+    val values = projectGroups.map { (it.totalActualReturn ?: 0.0).toFloat() }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -425,7 +430,7 @@ fun RoiLineChart(targetRoi: Double) {
                         textSize = 10f
                         textColor = Color.parseColor("#6B7280")
                         setDrawGridLines(false)
-                        valueFormatter = IndexAxisValueFormatter(months)
+                        valueFormatter = IndexAxisValueFormatter(labels)
                         granularity = 1f
                     }
                     animateX(1000)

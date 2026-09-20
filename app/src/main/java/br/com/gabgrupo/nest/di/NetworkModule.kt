@@ -7,6 +7,7 @@ import br.com.gabgrupo.nest.data.remote.GuidelineApiService
 import br.com.gabgrupo.nest.data.remote.IdeaApiService
 import br.com.gabgrupo.nest.data.remote.ProjectApiService
 import br.com.gabgrupo.nest.data.local.TokenDataStore
+import br.com.gabgrupo.nest.data.local.SessionEvents
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,7 +44,15 @@ object NetworkModule {
                 request
             }
 
-            chain.proceed(newRequest)
+            val response = chain.proceed(newRequest)
+            if (response.code == 401) {
+                response.close()
+                runBlocking { tokenDataStore.clearAll() }
+                SessionEvents.notifyExpired()
+                return@Interceptor chain.proceed(request)
+            }
+
+            response
         }
     }
 

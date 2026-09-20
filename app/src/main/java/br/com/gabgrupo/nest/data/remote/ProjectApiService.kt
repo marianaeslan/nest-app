@@ -14,12 +14,15 @@ interface ProjectApiService {
     @GET("/api/projects")
     suspend fun getAll(): Response<List<ProjectSummary>>
 
+    @GET("/api/projects/overview")
+    suspend fun getOverview(): Response<List<ProjectSummary>>
+
     @GET("/api/projects/{id}")
-    suspend fun getById(@Path("id") id: Long): Response<ProjectResponse>
+    suspend fun getById(@Path("id") id: String): Response<ProjectResponse>
 
     @POST("/api/projects")
     suspend fun create(@Body request: ProjectRequest): Response<ProjectResponse>
 
     @PUT("/api/projects/{id}")
-    suspend fun update(@Path("id") id: Long, @Body request: ProjectRequest): Response<ProjectResponse>
+    suspend fun update(@Path("id") id: String, @Body request: ProjectRequest): Response<ProjectResponse>
 }

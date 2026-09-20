@@ -13,6 +13,7 @@ data class ProjectRequest(
     val productivityGain: BigDecimal?,
     val startDate: String,
     val endDate: String?,
-    val idea: Long?
+    val ideaId: String?,
+    val guidelineId: String?
 )
 

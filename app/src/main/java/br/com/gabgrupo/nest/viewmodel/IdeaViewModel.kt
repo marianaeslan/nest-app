@@ -50,6 +50,15 @@ class IdeaViewModel @Inject constructor(
         }
     }
 
+    fun getOverview() {
+        viewModelScope.launch {
+            _listState.value = IdeaListState.Loading
+            ideaRepository.getOverview()
+                .onSuccess { _listState.value = IdeaListState.Success(it) }
+                .onFailure { _listState.value = IdeaListState.Error(it.message ?: "Erro ao buscar visão geral.") }
+        }
+    }
+
     fun createIdea(request: IdeaRequest) {
         viewModelScope.launch {
             _actionState.value = IdeaActionState.Loading
@@ -63,7 +72,7 @@ class IdeaViewModel @Inject constructor(
         }
     }
 
-    fun reviewIdea(id: Long, request: IdeaReviewRequest) {
+    fun reviewIdea(id: String, request: IdeaReviewRequest) {
         viewModelScope.launch {
             _actionState.value = IdeaActionState.Loading
             val result = ideaRepository.review(id, request)
@@ -72,6 +81,32 @@ class IdeaViewModel @Inject constructor(
                 _actionState.value = IdeaActionState.Success(response)
             }.onFailure { exception ->
                 _actionState.value = IdeaActionState.Error(exception.message ?: "Erro ao revisar ideia.")
+            }
+        }
+    }
+
+    fun updateIdea(id: String, request: IdeaRequest) {
+        viewModelScope.launch {
+            _actionState.value = IdeaActionState.Loading
+            val result = ideaRepository.update(id, request)
+
+            result.onSuccess { response ->
+                _actionState.value = IdeaActionState.Success(response)
+            }.onFailure { exception ->
+                _actionState.value = IdeaActionState.Error(exception.message ?: "Erro ao atualizar ideia.")
+            }
+        }
+    }
+
+    fun deleteIdea(id: String) {
+        viewModelScope.launch {
+            _actionState.value = IdeaActionState.Loading
+            val result = ideaRepository.delete(id)
+
+            result.onSuccess {
+                _actionState.value = IdeaActionState.Deleted
+            }.onFailure { exception ->
+                _actionState.value = IdeaActionState.Error(exception.message ?: "Erro ao excluir ideia.")
             }
         }
     }
@@ -97,5 +132,6 @@ sealed class IdeaActionState {
     data object Idle : IdeaActionState()
     data object Loading : IdeaActionState()
     data class Success(val idea: IdeaResponse) : IdeaActionState()
+    data object Deleted : IdeaActionState()
     data class Error(val message: String) : IdeaActionState()
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.gabgrupo.nest.data.model.GuidelineRequest
 import br.com.gabgrupo.nest.data.model.GuidelineResponse
+import br.com.gabgrupo.nest.data.model.GuidelineHistory
 import br.com.gabgrupo.nest.data.repository.GuidelineRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,9 @@ class GuidelineViewModel @Inject constructor(
 
     private val _actionState = MutableStateFlow<GuidelineActionState>(GuidelineActionState.Idle)
     val actionState: StateFlow<GuidelineActionState> = _actionState.asStateFlow()
+
+    private val _historyState = MutableStateFlow<GuidelineHistoryState>(GuidelineHistoryState.Idle)
+    val historyState: StateFlow<GuidelineHistoryState> = _historyState.asStateFlow()
 
     fun getAllGuidelines() {
         viewModelScope.launch {
@@ -50,7 +54,7 @@ class GuidelineViewModel @Inject constructor(
         }
     }
 
-    fun updateGuideline(id: Long, request: GuidelineRequest) {
+    fun updateGuideline(id: String, request: GuidelineRequest) {
         viewModelScope.launch {
             _actionState.value = GuidelineActionState.Loading
             val result = guidelineRepository.update(id, request)
@@ -64,7 +68,7 @@ class GuidelineViewModel @Inject constructor(
         }
     }
 
-    fun deleteGuideline(id: Long) {
+    fun deleteGuideline(id: String) {
         viewModelScope.launch {
             _actionState.value = GuidelineActionState.Loading
             val result = guidelineRepository.delete(id)
@@ -75,6 +79,15 @@ class GuidelineViewModel @Inject constructor(
             }.onFailure { exception ->
                 _actionState.value = GuidelineActionState.Error(exception.message ?: "Erro ao deletar diretriz.")
             }
+        }
+    }
+
+    fun getHistory(id: String) {
+        viewModelScope.launch {
+            _historyState.value = GuidelineHistoryState.Loading
+            guidelineRepository.getHistory(id)
+                .onSuccess { _historyState.value = GuidelineHistoryState.Success(it) }
+                .onFailure { _historyState.value = GuidelineHistoryState.Error(it.message ?: "Erro ao buscar histórico.") }
         }
     }
 
@@ -95,4 +108,11 @@ sealed class GuidelineActionState {
     data object Loading : GuidelineActionState()
     data object Success : GuidelineActionState()
     data class Error(val message: String) : GuidelineActionState()
+}
+
+sealed class GuidelineHistoryState {
+    data object Idle : GuidelineHistoryState()
+    data object Loading : GuidelineHistoryState()
+    data class Success(val history: List<GuidelineHistory>) : GuidelineHistoryState()
+    data class Error(val message: String) : GuidelineHistoryState()
 }

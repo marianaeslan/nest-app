@@ -2,6 +2,7 @@ package br.com.gabgrupo.nest.data.remote
 
 import br.com.gabgrupo.nest.data.model.GuidelineRequest
 import br.com.gabgrupo.nest.data.model.GuidelineResponse
+import br.com.gabgrupo.nest.data.model.GuidelineHistory
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -18,8 +19,11 @@ interface GuidelineApiService {
     suspend fun create(@Body request: GuidelineRequest): Response<GuidelineResponse>
 
     @PUT("/api/guidelines/{id}")
-    suspend fun update(@Path("id") id: Long, @Body request: GuidelineRequest): Response<GuidelineResponse>
+    suspend fun update(@Path("id") id: String, @Body request: GuidelineRequest): Response<GuidelineResponse>
 
     @DELETE("/api/guidelines/{id}")
-    suspend fun delete(@Path("id") id: Long): Response<Unit>
+    suspend fun delete(@Path("id") id: String): Response<Unit>
+
+    @GET("/api/guidelines/{id}/history")
+    suspend fun getHistory(@Path("id") id: String): Response<List<GuidelineHistory>>
 }

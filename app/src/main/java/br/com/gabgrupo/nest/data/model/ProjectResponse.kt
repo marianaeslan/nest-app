@@ -3,7 +3,7 @@ package br.com.gabgrupo.nest.data.model
 import java.math.BigDecimal
 
 data class ProjectResponse(
-    val id: Long,
+    val id: String,
     val title: String,
     val description: String,
     val status: ProjectStatus,
@@ -14,7 +14,11 @@ data class ProjectResponse(
     val productivityGain: BigDecimal?,
     val startDate: String,
     val endDate: String?,
-    val createdBy: UserSummary,
-    val idea: IdeaResponse?
+    val ideaId: String?,
+    val guidelineId: String?,
+    val createdBy: UserSummary?,
+    val idea: IdeaResponse?,
+    val createdAt: String?,
+    val updatedAt: String?
 )
 

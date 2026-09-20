@@ -24,6 +24,7 @@ import br.com.gabgrupo.nest.ui.theme.NestTheme
 
 enum class IdeaStatus(val label: String) {
     PENDING("Em análise"),
+    PRIORITIZED("Priorizada"),
     APPROVED("Aprovada"),
     REJECTED("Rejeitada"),
     DRAFT("Rascunho")
@@ -36,6 +37,7 @@ fun StatusBadge(
 ) {
     val backgroundColor = when (status) {
         IdeaStatus.PENDING -> StatusPending
+        IdeaStatus.PRIORITIZED -> br.com.gabgrupo.nest.ui.theme.NestGold
         IdeaStatus.APPROVED -> StatusApproved
         IdeaStatus.REJECTED -> StatusRejected
         IdeaStatus.DRAFT -> StatusDraft

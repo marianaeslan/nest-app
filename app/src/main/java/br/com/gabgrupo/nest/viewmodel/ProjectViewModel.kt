@@ -40,7 +40,16 @@ class ProjectViewModel @Inject constructor(
         }
     }
 
-    fun getProjectById(id: Long) {
+    fun getOverview() {
+        viewModelScope.launch {
+            _listState.value = ProjectListState.Loading
+            projectRepository.getOverview()
+                .onSuccess { _listState.value = ProjectListState.Success(it) }
+                .onFailure { _listState.value = ProjectListState.Error(it.message ?: "Erro ao buscar projetos.") }
+        }
+    }
+
+    fun getProjectById(id: String) {
         viewModelScope.launch {
             _detailState.value = ProjectDetailState.Loading
             val result = projectRepository.getById(id)
@@ -66,7 +75,7 @@ class ProjectViewModel @Inject constructor(
         }
     }
 
-    fun updateProject(id: Long, request: ProjectRequest) {
+    fun updateProject(id: String, request: ProjectRequest) {
         viewModelScope.launch {
             _actionState.value = ProjectActionState.Loading
             val result = projectRepository.update(id, request)
