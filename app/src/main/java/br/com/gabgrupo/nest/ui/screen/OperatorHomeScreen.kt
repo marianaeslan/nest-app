@@ -75,6 +75,7 @@ import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.viewmodel.HomeViewModel
 import br.com.gabgrupo.nest.viewmodel.IdeaListState
 import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun OperatorHomeScreen(
@@ -770,10 +771,8 @@ private fun HighlightCard(
             }
         }
 
-        Image(
-            painter = painterResource(
-                id = R.drawable.lamp
-            ),
+        Icon(
+            imageVector = Icons.Default.Lightbulb,
             contentDescription = "Ideia",
             modifier = Modifier
                 .size(125.dp)
@@ -782,7 +781,7 @@ private fun HighlightCard(
                     x = (-6).dp,
                     y = 4.dp
                 ),
-            contentScale = ContentScale.Fit
+            tint = Color.White.copy(alpha = 0.2f)
         )
     }
 }

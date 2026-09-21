@@ -33,6 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +46,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.gabgrupo.nest.data.model.IdeaStatus
 import br.com.gabgrupo.nest.data.model.UserRole
 import br.com.gabgrupo.nest.ui.shared.NavItem
 import br.com.gabgrupo.nest.ui.shared.NestBottomNavBar
@@ -53,14 +58,33 @@ import br.com.gabgrupo.nest.ui.theme.NestTextSecondary
 import br.com.gabgrupo.nest.ui.theme.NestTheme
 import br.com.gabgrupo.nest.ui.theme.NestWhite
 import br.com.gabgrupo.nest.ui.theme.StatusApproved
+import br.com.gabgrupo.nest.viewmodel.IdeaListState
+import br.com.gabgrupo.nest.viewmodel.IdeaViewModel
 
 @Composable
 fun HatchScreen(
+    viewModel: IdeaViewModel = hiltViewModel(),
     onNavigate: (String) -> Unit
 ) {
+    val ideaState by viewModel.listState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getMyIdeas()
+    }
+
+    val myIdeas = (ideaState as? IdeaListState.Success)?.ideas.orEmpty()
+    val latestIdea = myIdeas
+        .filter { it.status != IdeaStatus.REJECTED }
+        .maxByOrNull { it.createdAt.orEmpty() }
+
     HatchScreenContent(
-        ideaTitle = "Reduzir tempo de check-in dos passageiros",
-        currentStep = 2,
+        ideaTitle = latestIdea?.title ?: "Nenhuma ideia enviada ainda.",
+        currentStep = when (latestIdea?.status) {
+            IdeaStatus.PENDING -> 1
+            IdeaStatus.PRIORITIZED -> 2
+            IdeaStatus.APPROVED -> 4
+            else -> 1
+        },
         onNavigate = onNavigate
     )
 }
@@ -304,14 +328,3 @@ private fun TimelineItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun HatchScreenPreview() {
-    NestTheme {
-        HatchScreenContent(
-            ideaTitle = "Melhoria no processo de limpeza dos ônibus",
-            currentStep = 2,
-            onNavigate = {}
-        )
-    }
-}
